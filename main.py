@@ -1,22 +1,30 @@
 from modules.party import Party
-from modules.multiparty_psi import run_3_party_psi
+from modules.multiparty_psi import run_n_party_psi
 from modules.crypto import encrypt, hash_to_int
 
 def main():
-    alice = Party("Party 0", ["apple", "banana", "cherry"])
-    bob = Party("Party 1", ["banana", "cherry", "date"])
-    carol = Party("Party 2", ["cherry", "banana", "fig"])
+    # List of parties
+    parties = [
+        Party("Party 0", ["apple", "banana", "cherry"]),
+        Party("Party 1", ["banana", "cherry", "date"]),
+        Party("Party 2", ["cherry", "banana", "fig"]),
+        Party("Party 3", ["grape", "banana", "cherry"]),
+    ]
 
-    intersection = run_3_party_psi(alice, bob, carol)
+    intersection, _ = run_n_party_psi(parties)
 
     print("Encrypted Intersection:", intersection)
 
-    # Optional: reverse map for demonstration
-    reverse_map = {encrypt(hash_to_int(x), alice.get_private_key()): x for x in alice.get_dataset()}
-    re_encrypted_map = {encrypt(k, bob.get_private_key()): v for k, v in reverse_map.items()}
-    final_map = {encrypt(k, carol.get_private_key()): v for k, v in re_encrypted_map.items()}
+    # Use the first party to reverse map just for demonstration
+    first = parties[0]
+    reverse_map = {encrypt(hash_to_int(x), first.get_private_key()): x for x in first.get_dataset()}
 
-    result = [final_map[x] for x in intersection]
+    # Re-encrypt with all others to match intersection
+    for other in parties:
+        if other != first:
+            reverse_map = {encrypt(k, other.get_private_key()): v for k, v in reverse_map.items()}
+
+    result = [reverse_map[x] for x in intersection]
     print("Intersection:", result)
 
 if __name__ == "__main__":
