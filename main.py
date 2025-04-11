@@ -13,19 +13,7 @@ def main():
     ]
 
     intersection = run_n_party_psi(parties)
-    print("\n🔑 Encrypted Intersection:", intersection)
-
-    print("\n🔍 Decrypted Intersection:")
-    # Just use the first party to map back
-    reverse_map = parties[0].compute_final_encrypted_items(parties)
-
-    decrypted = []
-    for pt_key in reverse_map:
-        point_obj = Point(curve, pt_key[0], pt_key[1])
-        if str(point_obj) in intersection:
-            decrypted.append(reverse_map[pt_key])
-
-    print(decrypted)
+    print("\n🔍 Intersection:", intersection)
 
 if __name__ == "__main__":
     main()

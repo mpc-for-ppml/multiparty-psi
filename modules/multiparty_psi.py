@@ -1,4 +1,6 @@
 from .party import Party
+from .ecc import curve
+from tinyec.ec import Point
 
 def run_3_party_psi(p1: Party, p2: Party, p3: Party):
     # Step 1: Encrypt data by each party (done during init)
@@ -19,7 +21,16 @@ def run_3_party_psi(p1: Party, p2: Party, p3: Party):
     for s in final_sets[1:]:
         intersection &= set(map(str, s))
 
-    return intersection
+    # Step 4: Compute the decrypted intersection
+    reverse_map = parties[0].compute_final_encrypted_items(parties)
+
+    decrypted = []
+    for pt_key in reverse_map:
+        point_obj = Point(curve, pt_key[0], pt_key[1])
+        if str(point_obj) in intersection:
+            decrypted.append(reverse_map[pt_key])
+
+    return decrypted
 
 def run_n_party_psi(parties: list[Party]):
     # Step 1: Encrypt data by each party (done during init)
@@ -38,5 +49,14 @@ def run_n_party_psi(parties: list[Party]):
     intersection = set(map(str, final_sets[0]))
     for s in final_sets[1:]:
         intersection &= set(map(str, s))
+    
+    # Step 4: Compute the decrypted intersection
+    reverse_map = parties[0].compute_final_encrypted_items(parties)
 
-    return intersection
+    decrypted = []
+    for pt_key in reverse_map:
+        point_obj = Point(curve, pt_key[0], pt_key[1])
+        if str(point_obj) in intersection:
+            decrypted.append(reverse_map[pt_key])
+
+    return decrypted
