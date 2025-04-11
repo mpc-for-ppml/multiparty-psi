@@ -1,31 +1,31 @@
 from modules.party import Party
 from modules.multiparty_psi import run_n_party_psi
-from modules.crypto import encrypt, hash_to_int
+from modules.ecc import curve
+from tinyec.ec import Point
 
 def main():
     # List of parties
     parties = [
-        Party("Party 0", ["apple", "banana", "cherry"]),
-        Party("Party 1", ["banana", "cherry", "date"]),
+        Party("Party 0", ["banana", "cherry"]),
+        Party("Party 1", ["apple", "banana", "cherry", "date"]),
         Party("Party 2", ["cherry", "banana", "fig"]),
-        Party("Party 3", ["grape", "banana", "cherry"]),
+        Party("Party 3", ["grape", "banana", "yoo", "cherry", "plane"]),
     ]
 
-    intersection, _ = run_n_party_psi(parties)
+    intersection = run_n_party_psi(parties)
+    print("\n🔑 Encrypted Intersection:", intersection)
 
-    print("Encrypted Intersection:", intersection)
+    print("\n🔍 Decrypted Intersection:")
+    # Just use the first party to map back
+    reverse_map = parties[0].compute_final_encrypted_items(parties)
 
-    # Use the first party to reverse map just for demonstration
-    first = parties[0]
-    reverse_map = {encrypt(hash_to_int(x), first.get_private_key()): x for x in first.get_dataset()}
+    decrypted = []
+    for pt_key in reverse_map:
+        point_obj = Point(curve, pt_key[0], pt_key[1])
+        if str(point_obj) in intersection:
+            decrypted.append(reverse_map[pt_key])
 
-    # Re-encrypt with all others to match intersection
-    for other in parties:
-        if other != first:
-            reverse_map = {encrypt(k, other.get_private_key()): v for k, v in reverse_map.items()}
-
-    result = [reverse_map[x] for x in intersection]
-    print("Intersection:", result)
+    print(decrypted)
 
 if __name__ == "__main__":
     main()
